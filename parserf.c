@@ -40,6 +40,91 @@ Node *init_node(Node *node, char *value, TokenType type)
     return node;
 }
 
+void print_error(char *error_type)
+{
+    printf("ERROR: %s\n", error_type);
+    exit(1);
+}
+
+
+
+Token *generate_operation_nodes(Token *current_token, Node *current_node)
+{
+
+    Node *oper_node = current_node;    
+    current_token--;
+    if(current_token->type == INT){
+        Node *expr_node = malloc(sizeof(Node));
+        expr_node = init_node(expr_node, current_token->value, INT);
+        oper_node->left = expr_node;
+        current_token++;
+        current_token++;
+        if(current_token->type == INT)
+        {
+            current_token++;
+            if(current_token->type == OPERATOR)
+            {
+                Node* nxtnode=malloc(sizeof(Node));
+                oper_node->right=init_node(nxtnode,current_token->value,OPERATOR);
+                current_token = generate_operation_nodes(current_token, oper_node->right);
+                // current_token--;
+            } 
+            else 
+            {
+                current_token--;
+                Node *expr_node = malloc(sizeof(Node));
+                expr_node = init_node(expr_node, current_token->value, INT);
+                oper_node->right = expr_node;
+            }
+        }
+        else
+        {
+            print_error("ERROR: Missing value after operator");
+        }
+    }
+    else
+    {
+        print_error("ERROR: Missing value before operator");
+    }
+    return current_token;
+}
+  
+
+
+// Token *generate_operation_nodes(Token *current_token, Node *current_node)
+// {
+//     int iteration;
+//     while(current_token->type == INT || current_token->type == OPERATOR){
+//         iteration++;
+//         Node *oper_node = malloc(sizeof(Node));
+//         oper_node = init_node(oper_node, current_token->value, OPERATOR);
+//         current_node->left = oper_node;
+//         printf("CURRENT TOKEN 1: %s\n", current_token->value);
+//         current_token--;
+//         if(current_token->type == INT){
+//           Node *expr_node = malloc(sizeof(Node));
+//           expr_node = init_node(expr_node, current_token->value, INT);
+//           oper_node->left = expr_node;
+//           printf("CURRENT TOKEN 2: %s\n", current_token->value);
+//           current_token++;
+//           current_token++;
+//           printf("CURRENT TOKEN 3: %s\n", current_token->value);
+//           if(current_token->type != INT || current_token == NULL){
+//             printf("Syntax Error hERE\n");
+//             exit(1);
+//           }
+//           Node *second_expr_node = malloc(sizeof(Node));
+//           second_expr_node = init_node(second_expr_node, current_token->value, INT);
+//           oper_node->right = second_expr_node;
+//         }
+//         if(current_token->type == OPERATOR){
+//          // 
+//         }
+//         current_token++;
+//       }
+//       return current_token;
+// }
+
 Node *parser(Token *tokens)
 {
     Token *current_token = &tokens[0];
@@ -78,10 +163,23 @@ Node *parser(Token *tokens)
                         current_token++;
                         if(current_token->type == INT)
                         {
-                            Node *expr_node = malloc(sizeof(Node));
-                            expr_node = init_node(expr_node, current_token->value, INT);
-                            current->left->left = expr_node;
                             current_token++;
+                            if(current_token->type == OPERATOR)
+                            {
+                                Node* nxtnode=malloc(sizeof(Node));
+                                open_paren_node->left=init_node(nxtnode,current_token->value,OPERATOR);              
+                                current_token = generate_operation_nodes(current_token, open_paren_node->left);
+                                printf("current token: %s\n", current_token->value);
+                            } 
+                            else 
+                            {
+                              current_token--;
+                              Node *expr_node = malloc(sizeof(Node));
+                              expr_node = init_node(expr_node, current_token->value, INT);
+                              open_paren_node->left = expr_node;
+                            }
+                            current_token++;
+                            printf("current token: %s\n", current_token->value);
                             if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
                             {
                                 Node *close_paren_node = malloc(sizeof(Node));
@@ -97,38 +195,36 @@ Node *parser(Token *tokens)
                                 }
                                 else
                                 {
-                                    printf("ERROR : Invalid syntax semi\n");
-                                    exit(1);
+                                    print_error("ERROR : Invalid syntax semi");
                                 }
                             }
                             else
                             {
-                                printf("ERROR : Invalid syntax on close\n");
-                                exit(1);
+                                print_error("ERROR : Invalid syntax on close");
                             }
                         }
                         else
                         {
-                            printf("ERROR : Invalid syntax int\n");
-                            exit(1);
+                            print_error("ERROR : Invalid syntax int");
                         }
 
                     }
                     else
                     {
-                        printf("ERROR : Invalid syntaxon open\n");
-                        exit(1);        
+                        print_error("ERROR : Invalid syntaxon open");       
                     }
                 }
                 else
                 {
-                    printf("ERROR : Invalid syntax on exit -> %s\n",current_token->value);
-                    exit(1);
+                    print_error("ERROR : Invalid syntax on exit");
                 }
             case SEPARATOR:
                 break;
             case INT:
                 printf("int\n");
+                break;
+            case OPERATOR:
+                printf("op");
                 break;
             case BEGINNING:
             case END_OF_TOKENS:

@@ -1,9 +1,19 @@
 section .data
-  printf_format: db '%d', 10, 0
-extern printf
-global main
+	printf_format: db '%d', 10, 0
 section .text
+	global main
+	extern printf
 main:
-  mov rax, 60
-  mov rdi, 1
-  syscall
+	mov rax, 60
+	mov rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	add rdi, 10
+	syscall

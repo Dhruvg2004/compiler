@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     
     Node *root = parser(tokens);
     generate_code(root);
+    system("./buildasm.sh");
     fclose(file);
     return 0;
 }   

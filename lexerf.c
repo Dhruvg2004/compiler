@@ -7,6 +7,7 @@ typedef enum{
     BEGINNING,
     INT,
     KEYWORD,
+    OPERATOR,
     SEPARATOR,
     END_OF_TOKENS
 } TokenType;
@@ -32,6 +33,9 @@ void print_token(Token token)
             break;
         case KEYWORD:
             printf("TOKEN TYPE : KEYWORD\n");
+            break;
+        case OPERATOR:
+            printf("TOKEN TYPE : OPERATOR\n");
             break;
         case SEPARATOR:
             printf("TOKEN TYPE : SEPARATOR\n");
@@ -81,10 +85,10 @@ Token *generate_keyword(char current,FILE *file)
     return (token);
 }
 
-Token *generate_separator(char current)
+Token *generate_separator_or_operator(char current, TokenType type)
 {
     Token *token = malloc(sizeof(Token));
-    token->type = SEPARATOR;
+    token->type = type;
     token->value = malloc(sizeof(char)*2);
     token->value[0]=current;
     token->value[1]='\0';
@@ -100,17 +104,27 @@ Token *lexer (FILE *file)
         Token *token = malloc(sizeof(Token));
         if(current == ';')
         {
-            token = generate_separator(current);   
+            token = generate_separator_or_operator(current,SEPARATOR);   
             tokens[token_index++] = *token;
         }
         else if(current == '(')
         {
-            token = generate_separator(current);   
+            token = generate_separator_or_operator(current,SEPARATOR);   
             tokens[token_index++] = *token;
         }
         else if(current == ')')
         {
-            token = generate_separator(current);   
+            token = generate_separator_or_operator(current,SEPARATOR);   
+            tokens[token_index++] = *token;
+        }
+        else if(current == '+')
+        {
+            token = generate_separator_or_operator(current,OPERATOR);   
+            tokens[token_index++] = *token;
+        }
+        else if(current == '-')
+        {
+            token = generate_separator_or_operator(current,OPERATOR);   
             tokens[token_index++] = *token;
         }
         else if(isdigit(current)){
