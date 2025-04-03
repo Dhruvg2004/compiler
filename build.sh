@@ -1,2 +1,2 @@
-gcc main.c lexerf.c -o main -Wall -Wextra
+gcc main.c lexerf.c parserf.c -o main -Wall -Wextra
 #  PS1='[\W]$'

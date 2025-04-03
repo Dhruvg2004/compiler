@@ -4,6 +4,7 @@
 #include <string.h> 
 
 typedef enum{
+    BEGINNING,
     INT,
     KEYWORD,
     SEPARATOR,
@@ -19,22 +20,29 @@ typedef struct{
 void print_token(Token token)
 {
     printf("TOKEN VALUE : ");
+    printf(" '");
     for(size_t i = 0;token.value[i] != '\0';i++)
     {
         printf("%c",token.value[i]);
     }
-    printf(" ");
-    if(token.type == INT)
+    printf("' ");
+    switch(token.type)
     {
-        printf("TOKEN TYPE : INT\n");
-    }
-    if(token.type == KEYWORD)
-    {
-        printf("TOKEN TYPE : KEYWORD\n");
-    }
-    if(token.type == SEPARATOR)
-    {
-        printf("TOKEN TYPE : SEPARATOR\n");
+        case INT:
+            printf("TOKEN TYPE : INT\n");
+            break;
+        case KEYWORD:
+            printf("TOKEN TYPE : KEYWORD\n");
+            break;
+        case SEPARATOR:
+            printf("TOKEN TYPE : SEPARATOR\n");
+            break;
+        case END_OF_TOKENS:
+            printf("END OF TOKENS");
+            break;
+        case BEGINNING:
+            printf("BEGINNING\n");
+            break;
     }
 }
 
@@ -79,6 +87,16 @@ Token *generate_keyword(char current,FILE *file)
     return (token);
 }
 
+Token *generate_separator(char current)
+{
+    Token *token = malloc(sizeof(Token));
+    token->type = SEPARATOR;
+    token->value = malloc(sizeof(char)*2);
+    token->value[0]=current;
+    token->value[1]='\0';
+    return token;
+}
+
 Token *lexer (FILE *file)
 {
     char current = fgetc(file);
@@ -88,37 +106,38 @@ Token *lexer (FILE *file)
         Token *token = malloc(sizeof(Token));;
         if(current == ';')
         {
-            token->type = SEPARATOR;
-            token->value = malloc(sizeof(char)*2);
-            token->value[0]=current;
-            token->value[1]='\0';
+            token = generate_separator(current);   
             tokens[token_index++] = *token;
         }
         else if(current == '(')
         {
-            token->type = SEPARATOR;
-            token->value = malloc(sizeof(char)*2);
-            token->value[0]=current;
-            token->value[1]='\0';
+            token = generate_separator(current);   
             tokens[token_index++] = *token;
         }
         else if(current == ')')
         {
-            token->type = SEPARATOR;
-            token->value = malloc(sizeof(char)*2);
-            token->value[0]=current;
-            token->value[1]='\0';
+            token = generate_separator(current);   
             tokens[token_index++] = *token;
         }
         else if(isdigit(current)){
-            Token *integer_token = generate_number(current,file);
-            tokens[token_index++] = *integer_token;
+            token = generate_number(current,file);
+            tokens[token_index++] = *token;
         }
         else if(isalpha(current)){
-            Token *keyword_token = generate_keyword(current,file);
-            tokens[token_index++] = *keyword_token;
+            token = generate_keyword(current,file);
+            tokens[token_index++] = *token;
         }
+        // else if(current == ' ')
+        // {
+        //     continue;
+        // }
+        // else
+        // {
+        //     printf("ERROR : UNKNOWN CHARACTER %c\n",current);
+        //     break;
+        // }
         current = fgetc(file);
+        free(token);
     }
     tokens[token_index].value=NULL;
     tokens[token_index].type=END_OF_TOKENS;
