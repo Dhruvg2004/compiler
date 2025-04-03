@@ -122,6 +122,16 @@ Token *lexer (FILE *file)
             token = generate_separator_or_operator(current,OPERATOR);   
             tokens[token_index++] = *token;
         }
+        else if(current == '*')
+        {
+            token = generate_separator_or_operator(current,OPERATOR);   
+            tokens[token_index++] = *token;
+        }
+        else if(current == '/')
+        {
+            token = generate_separator_or_operator(current,OPERATOR);   
+            tokens[token_index++] = *token;
+        }
         else if(current == '-')
         {
             token = generate_separator_or_operator(current,OPERATOR);   

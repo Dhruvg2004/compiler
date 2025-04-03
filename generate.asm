@@ -5,15 +5,5 @@ section .text
 	extern printf
 main:
 	mov rax, 60
-	mov rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
-	add rdi, 10
+	mov rdi, 76
 	syscall

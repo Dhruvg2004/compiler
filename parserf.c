@@ -48,46 +48,132 @@ void print_error(char *error_type)
 
 
 
-Token *generate_operation_nodes(Token *current_token, Node *current_node)
-{
 
-    Node *oper_node = current_node;    
-    current_token--;
-    if(current_token->type == INT){
-        Node *expr_node = malloc(sizeof(Node));
-        expr_node = init_node(expr_node, current_token->value, INT);
-        oper_node->left = expr_node;
-        current_token++;
-        current_token++;
-        if(current_token->type == INT)
-        {
-            current_token++;
-            if(current_token->type == OPERATOR)
-            {
-                Node* nxtnode=malloc(sizeof(Node));
-                oper_node->right=init_node(nxtnode,current_token->value,OPERATOR);
-                current_token = generate_operation_nodes(current_token, oper_node->right);
-                // current_token--;
-            } 
-            else 
-            {
-                current_token--;
-                Node *expr_node = malloc(sizeof(Node));
-                expr_node = init_node(expr_node, current_token->value, INT);
-                oper_node->right = expr_node;
-            }
-        }
-        else
-        {
-            print_error("ERROR: Missing value after operator");
-        }
-    }
-    else
-    {
-        print_error("ERROR: Missing value before operator");
-    }
-    return current_token;
+
+
+
+double evaluate(Token **current_token);
+double parseExpression(Token **current_token);
+double parseTerm(Token **current_token);
+double parseFactor(Token **current_token);
+
+
+
+
+
+
+
+double evaluate(Token **current_token) {
+    return parseExpression(current_token);
 }
+
+double parseExpression(Token **current_token) {
+    double result = parseTerm(current_token);
+    
+    while ((*current_token)->type == OPERATOR &&
+           (!strcmp((*current_token)->value,"+")|| !strcmp((*current_token)->value,"-"))) {
+        char op = (*current_token)->value[0];
+        (*current_token)++;  // Move to next token
+        double term = parseTerm(current_token);
+        if (op == '+') result += term;
+        else result -= term;
+    }
+    return result;
+}
+
+double parseTerm(Token **current_token) {
+    double result = parseFactor(current_token);
+    
+    while ((*current_token)->type == OPERATOR &&
+           (!strcmp((*current_token)->value,"*") || !strcmp((*current_token)->value,"/"))) {
+        char op = (*current_token)->value[0];
+        (*current_token)++;
+        double factor = parseFactor(current_token);
+        if (op == '*') result *= factor;
+        else if (factor != 0) result /= factor;
+        else {
+            printf("Error: Division by zero\n");
+            exit(1);
+        }
+    }
+    return result;
+}
+
+double parseFactor(Token **current_token) {
+    double result = 0;
+
+    if ((*current_token)->type == SEPARATOR && !strcmp((*current_token)->value,"(")) {
+        (*current_token)++;  // Skip '('
+        result = parseExpression(current_token);
+        if ((*current_token)->type == SEPARATOR && !strcmp((*current_token)->value,")")) {
+            (*current_token)++;  // Skip ')'
+        } else {
+            printf("Error: Mismatched parentheses\n");
+            exit(1);
+        }
+    } else if ((*current_token)->type == INT) {
+        result = strtod((*current_token)->value, NULL);  // Convert token value to double
+        (*current_token)++;  // Move to the next token
+    } else {
+        printf("Error: Invalid character in expression %s\n",(*current_token)->value);
+        exit(1);
+    }
+
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Token *generate_operation_nodes(Token *current_token, Node *current_node)
+// {
+//     Node *oper_node = current_node;    
+//     current_token--;
+//     if(current_token->type == INT){
+//         Node *expr_node = malloc(sizeof(Node));
+//         expr_node = init_node(expr_node, current_token->value, INT);
+//         oper_node->left = expr_node;
+//         current_token++;
+//         current_token++;
+//         if(current_token->type == INT)
+//         {
+//             current_token++;
+//             if(current_token->type == OPERATOR)
+//             {
+//                 Node* nxtnode=malloc(sizeof(Node));
+//                 oper_node->right=init_node(nxtnode,current_token->value,OPERATOR);
+//                 current_token = generate_operation_nodes(current_token, oper_node->right);
+//                 // current_token--;
+//             } 
+//             else 
+//             {
+//                 current_token--;
+//                 Node *expr_node = malloc(sizeof(Node));
+//                 expr_node = init_node(expr_node, current_token->value, INT);
+//                 oper_node->right = expr_node;
+//             }
+//         }
+//         else
+//         {
+//             print_error("ERROR: Missing value after operator");
+//         }
+//     }
+//     else
+//     {
+//         print_error("ERROR: Missing value before operator");
+//     }
+//     return current_token;
+// }
   
 
 
@@ -161,24 +247,29 @@ Node *parser(Token *tokens)
                         current->left = open_paren_node;
                         // current = open_paren_node;
                         current_token++;
-                        if(current_token->type == INT)
-                        {
-                            current_token++;
-                            if(current_token->type == OPERATOR)
-                            {
+                        //if(current_token->type == INT)
+                        //{
+                        //    current_token++;
+                        //    if(current_token->type == OPERATOR)
+                        //    {
+                        //        current_token--;
+                                int res=(int)evaluate(&current_token);
+                                char *val=malloc(sizeof(char) * 8 );
+                                sprintf(val,"%d",res);
+
                                 Node* nxtnode=malloc(sizeof(Node));
-                                open_paren_node->left=init_node(nxtnode,current_token->value,OPERATOR);              
-                                current_token = generate_operation_nodes(current_token, open_paren_node->left);
-                                printf("current token: %s\n", current_token->value);
-                            } 
-                            else 
-                            {
-                              current_token--;
-                              Node *expr_node = malloc(sizeof(Node));
-                              expr_node = init_node(expr_node, current_token->value, INT);
-                              open_paren_node->left = expr_node;
-                            }
-                            current_token++;
+                                open_paren_node->left=init_node(nxtnode,val,INT);    
+                                // current_token = generate_operation_nodes(current_token, open_paren_node->left);
+                                // printf("current token: %s\n", current_token->value);
+                          //  } 
+                            //else 
+                            // {
+                            //   current_token--;
+                            //   Node *expr_node = malloc(sizeof(Node));
+                            //   expr_node = init_node(expr_node, current_token->value, INT);
+                            //   open_paren_node->left = expr_node;
+                            //   current_token++;
+                            // }
                             printf("current token: %s\n", current_token->value);
                             if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
                             {
@@ -202,11 +293,11 @@ Node *parser(Token *tokens)
                             {
                                 print_error("ERROR : Invalid syntax on close");
                             }
-                        }
-                        else
-                        {
-                            print_error("ERROR : Invalid syntax int");
-                        }
+                        // }
+                        // else
+                        // {
+                        //     print_error("ERROR : Invalid syntax int");
+                        // }
 
                     }
                     else
