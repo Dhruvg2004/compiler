@@ -1,6 +1,15 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 
-Token *parser(Token *tokens);
+typedef struct Node {
+    char *value;
+    TokenType type;
+    struct Node *right;
+    struct Node *left;
+} Node;
+
+void print_tree(Node *node, int indent, char *identifier);
+Node *init_node(Node *node, char *value, TokenType type);
+Node *parser(Token *tokens);
 
 #endif

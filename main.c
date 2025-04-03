@@ -6,6 +6,7 @@
 
 #include "lexerf.h"
 #include "parserf.h"
+#include "codegeneratorf.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +27,9 @@ int main(int argc, char *argv[])
     {
         print_token(tokens[i]);
     }
-    parser(tokens);
+    
+    Node *root = parser(tokens);
+    generate_code(root);
     fclose(file);
     return 0;
 }   

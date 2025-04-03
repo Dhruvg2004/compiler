@@ -16,7 +16,6 @@ typedef struct{
     char *value;
 } Token;
 
-
 void print_token(Token token)
 {
     printf("TOKEN VALUE : ");
@@ -38,7 +37,7 @@ void print_token(Token token)
             printf("TOKEN TYPE : SEPARATOR\n");
             break;
         case END_OF_TOKENS:
-            printf("END OF TOKENS");
+            printf("END OF TOKENS\n");
             break;
         case BEGINNING:
             printf("BEGINNING\n");
@@ -49,7 +48,6 @@ void print_token(Token token)
 Token *generate_number(char current,FILE *file)
 {
     Token *token = malloc(sizeof(Token));
-    token->type=INT;
     char *value = malloc(sizeof(char) * 8 );
     int value_index=0;
     while(isdigit(current) && current !=EOF)
@@ -60,7 +58,8 @@ Token *generate_number(char current,FILE *file)
     }
     ungetc(current, file);
     value[value_index]='\0';
-    token->value = value;
+    token->value = value;    
+    token->type=INT;
     return (token);
 }
 
@@ -77,13 +76,8 @@ Token *generate_keyword(char current,FILE *file)
     }
     ungetc(current, file);
     keyword[keyword_index]='\0';
-    // printf("infunction : %s\n", keyword);
-    if(!strcmp(keyword,"exit"))
-    {
-        token->type=KEYWORD;
-        token->value="EXIT";
-    }
-    
+    token->value=keyword;
+    token->type=KEYWORD;    
     return (token);
 }
 
@@ -103,7 +97,7 @@ Token *lexer (FILE *file)
     Token *tokens = malloc(sizeof(Token)*1024);
     size_t token_index = 0;
     while(current != EOF){
-        Token *token = malloc(sizeof(Token));;
+        Token *token = malloc(sizeof(Token));
         if(current == ';')
         {
             token = generate_separator(current);   
@@ -127,15 +121,6 @@ Token *lexer (FILE *file)
             token = generate_keyword(current,file);
             tokens[token_index++] = *token;
         }
-        // else if(current == ' ')
-        // {
-        //     continue;
-        // }
-        // else
-        // {
-        //     printf("ERROR : UNKNOWN CHARACTER %c\n",current);
-        //     break;
-        // }
         current = fgetc(file);
         free(token);
     }
