@@ -115,7 +115,7 @@ double parseFactor(Token **current_token) {
         result = strtod((*current_token)->value, NULL);  // Convert token value to double
         (*current_token)++;  // Move to the next token
     } else {
-        printf("Error: Invalid character in expression %s\n",(*current_token)->value);
+        printf("Error: Invalid/Missing value in expression %s\n",(*current_token)->value);
         exit(1);
     }
 
@@ -245,60 +245,36 @@ Node *parser(Token *tokens)
                         Node *open_paren_node = malloc(sizeof(Node));
                         open_paren_node = init_node(open_paren_node, current_token->value, SEPARATOR);
                         current->left = open_paren_node;
-                        // current = open_paren_node;
                         current_token++;
-                        //if(current_token->type == INT)
-                        //{
-                        //    current_token++;
-                        //    if(current_token->type == OPERATOR)
-                        //    {
-                        //        current_token--;
-                                int res=(int)evaluate(&current_token);
-                                char *val=malloc(sizeof(char) * 8 );
-                                sprintf(val,"%d",res);
+                        int res=(int)evaluate(&current_token);
+                        char *val=malloc(sizeof(char) * 8 );
+                        sprintf(val,"%d",res);
 
-                                Node* nxtnode=malloc(sizeof(Node));
-                                open_paren_node->left=init_node(nxtnode,val,INT);    
-                                // current_token = generate_operation_nodes(current_token, open_paren_node->left);
-                                // printf("current token: %s\n", current_token->value);
-                          //  } 
-                            //else 
-                            // {
-                            //   current_token--;
-                            //   Node *expr_node = malloc(sizeof(Node));
-                            //   expr_node = init_node(expr_node, current_token->value, INT);
-                            //   open_paren_node->left = expr_node;
-                            //   current_token++;
-                            // }
-                            printf("current token: %s\n", current_token->value);
-                            if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
+                        Node* nxtnode=malloc(sizeof(Node));
+                        open_paren_node->left=init_node(nxtnode,val,INT);    
+                        printf("current token: %s\n", current_token->value);
+                        if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
+                        {
+                            Node *close_paren_node = malloc(sizeof(Node));
+                            close_paren_node = init_node(close_paren_node, current_token->value, SEPARATOR);
+                            current->left->right = close_paren_node;
+                            current_token++;
+                            if( current_token->type == SEPARATOR && !strcmp(current_token->value , ";"))
                             {
-                                Node *close_paren_node = malloc(sizeof(Node));
-                                close_paren_node = init_node(close_paren_node, current_token->value, SEPARATOR);
-                                current->left->right = close_paren_node;
-                                current_token++;
-                                if( current_token->type == SEPARATOR && !strcmp(current_token->value , ";"))
-                                {
-                                    Node *semi_node = malloc(sizeof(Node));
-                                    semi_node = init_node(semi_node, current_token->value, SEPARATOR);
-                                    current->right = semi_node;
-                                    break;
-                                }
-                                else
-                                {
-                                    print_error("ERROR : Invalid syntax semi");
-                                }
+                                Node *semi_node = malloc(sizeof(Node));
+                                semi_node = init_node(semi_node, current_token->value, SEPARATOR);
+                                current->right = semi_node;
+                                break;
                             }
                             else
                             {
-                                print_error("ERROR : Invalid syntax on close");
+                                print_error("ERROR : Invalid syntax semi");
                             }
-                        // }
-                        // else
-                        // {
-                        //     print_error("ERROR : Invalid syntax int");
-                        // }
-
+                        }
+                        else
+                        {
+                            print_error("ERROR : Invalid syntax on close");
+                        }
                     }
                     else
                     {
