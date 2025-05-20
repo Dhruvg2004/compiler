@@ -6,6 +6,7 @@
 
 #include "lexerf.h"
 #include "parserf.h"
+#include "hashmap/hashmap.h"
 
 void arithmetic(Node *node,FILE *file)
 {
@@ -36,6 +37,7 @@ void arithmetic(Node *node,FILE *file)
 
 void traverse_tree(Node *node, int is_left, FILE *file)
 {
+    static int flag=0;
     if(node == NULL)
     {
         return;
@@ -43,6 +45,7 @@ void traverse_tree(Node *node, int is_left, FILE *file)
     else if(strcmp(node->value, "exit") == 0)
     {
         fprintf(file, "\tmov rax, 60\n");
+        flag=1;
     }
     else if(strcmp(node->value, "(") == 0)
     {
@@ -50,9 +53,11 @@ void traverse_tree(Node *node, int is_left, FILE *file)
     }
     else if(node->type == OPERATOR)
     {
-        fprintf(file, "\tmov rdi, %s\n", node->left->value);
-        arithmetic(node,file);
-        return;
+    
+    }
+    else if(strcmp(node->value, "int") == 0)
+    {
+        
     }
     else if(node->type == INT)
     {
@@ -64,7 +69,11 @@ void traverse_tree(Node *node, int is_left, FILE *file)
     }
     else if(strcmp(node->value, ";") == 0)
     {
-        fprintf(file, "\tsyscall\n");
+        if(flag == 1)
+        {
+            fprintf(file, "\tsyscall\n");
+        }
+        // flag=0;
     }
     else if(is_left)
     {

@@ -8,6 +8,7 @@ typedef enum{
     INT,
     KEYWORD,
     OPERATOR,
+    IDENTIFIER,
     SEPARATOR,
     END_OF_TOKENS
 } TokenType;
@@ -40,6 +41,9 @@ void print_token(Token token)
         case SEPARATOR:
             printf("TOKEN TYPE : SEPARATOR\n");
             break;
+        case IDENTIFIER:
+            printf("TOKEN TYPE : IDENTIFIER\n");
+            break;
         case END_OF_TOKENS:
             printf("END OF TOKENS\n");
             break;
@@ -67,10 +71,10 @@ Token *generate_number(char current,FILE *file)
     return (token);
 }
 
-Token *generate_keyword(char current,FILE *file)
+Token *generate_keyword_or_identifier(char current,FILE *file)
 {
     Token *token = malloc(sizeof(Token));
-    char *keyword = malloc(sizeof(char) * 8 );
+    char *keyword = malloc(sizeof(char) * 1024 );
     int keyword_index=0;
     while(isalpha(current) && current !=EOF)
     {
@@ -81,7 +85,20 @@ Token *generate_keyword(char current,FILE *file)
     ungetc(current, file);
     keyword[keyword_index]='\0';
     token->value=keyword;
-    token->type=KEYWORD;    
+    
+    if(strcmp(keyword,("exit")) == 0)
+    {
+        token->type=KEYWORD;
+    }
+    else if(strcmp(keyword,"int") == 0)
+    {
+        token->type=KEYWORD;
+    }
+    else
+    {
+        token->type=IDENTIFIER;
+    }
+        
     return (token);
 }
 
@@ -98,10 +115,22 @@ Token *generate_separator_or_operator(char current, TokenType type)
 Token *lexer (FILE *file)
 {
     char current = fgetc(file);
-    Token *tokens = malloc(sizeof(Token)*1024);
+    int number_of_tokens=12;
+    Token *tokens = malloc(sizeof(Token)*number_of_tokens);
+    int token_size=0;
     size_t token_index = 0;
     while(current != EOF){
         Token *token = malloc(sizeof(Token));
+        token_size++;
+        if(token_size > number_of_tokens){
+            number_of_tokens *= 1.5;
+            tokens = realloc(tokens, sizeof(Token) * number_of_tokens);
+        }
+        if(current == '{' || current == '}')
+        {
+            token = generate_separator_or_operator(current,SEPARATOR);   
+            tokens[token_index++] = *token;
+        }
         if(current == ';')
         {
             token = generate_separator_or_operator(current,SEPARATOR);   
@@ -115,6 +144,11 @@ Token *lexer (FILE *file)
         else if(current == ')')
         {
             token = generate_separator_or_operator(current,SEPARATOR);   
+            tokens[token_index++] = *token;
+        }
+        else if(current == '=')
+        {
+            token = generate_separator_or_operator(current,OPERATOR);   
             tokens[token_index++] = *token;
         }
         else if(current == '+')
@@ -142,7 +176,7 @@ Token *lexer (FILE *file)
             tokens[token_index++] = *token;
         }
         else if(isalpha(current)){
-            token = generate_keyword(current,file);
+            token = generate_keyword_or_identifier(current,file);
             tokens[token_index++] = *token;
         }
         current = fgetc(file);
