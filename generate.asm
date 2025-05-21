@@ -6,8 +6,9 @@ section .text
 main:
 	mov rdi, 2
 	mov rdi, 5
+	mov rdi, 3
 	mov rax, 60
-	mov rdi, 11
+	mov rdi, 3
 	syscall
 	mov rax, 60
 	mov rdi, 2

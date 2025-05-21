@@ -1,6 +1,7 @@
 int x=2;
 {
-    x=5;
-    exit(11);
+    int x=5;
+    x=3;
+    exit(x);
 }
 exit(x);

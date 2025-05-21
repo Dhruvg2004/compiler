@@ -51,6 +51,18 @@ char *lookup(Scope *scope, const char *name) {
     return NULL;
 }
 
+void update_symbol_in_all_scopes(Scope *scope, const char *name, char* change) {
+    while (scope) {
+        char *sym = hashmap_get(&scope->table, name, strlen(name));
+        if (sym) {
+            hashmap_remove(&scope->table, (name), strlen((name)));
+            hashmap_put(&scope->table, (name), strlen((name)),change);
+            return;
+        }
+        scope = scope->parent;
+    }
+}
+
 Scope *global = NULL;
 
 
@@ -426,7 +438,7 @@ Node* create_variable(Token **current_t, Node *current)
 Node* reloc_var(Token **current_t, Node *current)
 {
     Token *current_token=*current_t;
-    hashmap_remove(&global->table, (current_token)->value, strlen((current_token)->value));
+    
     Node *identifier_node = malloc(sizeof(Node));
     identifier_node = init_node(identifier_node, current_token->value, IDENTIFIER);
     current->left = identifier_node;
@@ -474,10 +486,21 @@ Node* reloc_var(Token **current_t, Node *current)
         current->right = semi_node;
         current = semi_node;
     }
-    if(hashmap_put(&global->table,identifier_node->value, strlen(identifier_node->value), val) != 0){
-      printf("ERROR: Could not insert into hash table!\n");
-      exit(1);
+
+    if(hashmap_remove(&global->table, identifier_node->value, strlen(identifier_node->value)))
+    {
+        update_symbol_in_all_scopes(global,identifier_node->value,val);
     }
+    else
+    {
+        if(hashmap_put(&global->table,identifier_node->value, strlen(identifier_node->value), val) != 0){
+            printf("ERROR: Could not insert into hash table!\n");
+            exit(1);
+        }
+    }
+
+
+    
 
 
     *current_t=current_token;
