@@ -12,12 +12,24 @@ struct hashmap_s hashmap;
 
 
 
+typedef struct Node {
+    char *value;
+    TokenType type;
+    struct Node *right;
+    struct Node *left;
+} Node;
 
+// typedef struct IfStack {
+//     Node *items[1000];
+//     int top;
+// } IfStack;
 typedef struct Scope {
     hashmap_t table;
     struct Scope *parent;
     int level;
+    // IfStack if_stack;
 } Scope;
+
 
 // Create a new scope
 Scope *enter_scope(Scope *current) {
@@ -68,17 +80,40 @@ Scope *global = NULL;
 
 
 
+Node *brace_stack[1000];
+int brace_top = -1;
+
+void push_brace(Node *n) {
+    brace_stack[++brace_top] = n;
+}
+
+Node *pop_brace() {
+    if (brace_top < 0) return NULL;
+    return brace_stack[brace_top--];
+}
+
+
+// // if stack here
+
+// void push_if(Scope *scope, Node *if_node) {
+//     scope->if_stack.items[++scope->if_stack.top] = if_node;
+// }
+
+// Node *pop_if(Scope *scope) {
+//     if (scope->if_stack.top < 0) return NULL;
+//     return scope->if_stack.items[scope->if_stack.top--];
+// }
+
+// Node *peek_if(Scope *scope) {
+//     if (scope->if_stack.top < 0) return NULL;
+//     return scope->if_stack.items[scope->if_stack.top];
+// }
 
 
 
 
 
-typedef struct Node {
-    char *value;
-    TokenType type;
-    struct Node *right;
-    struct Node *left;
-} Node;
+
 
 void print_tree(Node *node, int indent, char *identifier)
 {
@@ -194,7 +229,8 @@ double parseFactor(Token **current_token)
     } 
     else if((*current_token)->type == IDENTIFIER){
         //if the identifier arrives it will auto solve it self
-        char* val=hashmap_get(&global->table, (*current_token)->value, strlen((*current_token)->value));
+        // char* val=hashmap_get(&global->table, (*current_token)->value, strlen((*current_token)->value));
+        char* val = lookup(global,(*current_token)->value);
         if(val== 0)
         {
             printf("ERROR: \"%s\" does not exist in hash table!\n",(*current_token)->value);
@@ -218,91 +254,6 @@ double parseFactor(Token **current_token)
 
 
 
-
-
-
-
-
-
-
-
-// Token *generate_operation_nodes(Token *current_token, Node *current_node)
-// {
-//     Node *oper_node = current_node;    
-//     current_token--;
-//     if(current_token->type == INT){
-//         Node *expr_node = malloc(sizeof(Node));
-//         expr_node = init_node(expr_node, current_token->value, INT);
-//         oper_node->left = expr_node;
-//         current_token++;
-//         current_token++;
-//         if(current_token->type == INT)
-//         {
-//             current_token++;
-//             if(current_token->type == OPERATOR)
-//             {
-//                 Node* nxtnode=malloc(sizeof(Node));
-//                 oper_node->right=init_node(nxtnode,current_token->value,OPERATOR);
-//                 current_token = generate_operation_nodes(current_token, oper_node->right);
-//                 // current_token--;
-//             } 
-//             else 
-//             {
-//                 current_token--;
-//                 Node *expr_node = malloc(sizeof(Node));
-//                 expr_node = init_node(expr_node, current_token->value, INT);
-//                 oper_node->right = expr_node;
-//             }
-//         }
-//         else
-//         {
-//             print_error("ERROR: Missing value after operator");
-//         }
-//     }
-//     else
-//     {
-//         print_error("ERROR: Missing value before operator");
-//     }
-//     return current_token;
-// }
-  
-
-
-// Token *generate_operation_nodes(Token *current_token, Node *current_node)
-// {
-//     int iteration;
-//     while(current_token->type == INT || current_token->type == OPERATOR){
-//         iteration++;
-//         Node *oper_node = malloc(sizeof(Node));
-//         oper_node = init_node(oper_node, current_token->value, OPERATOR);
-//         current_node->left = oper_node;
-//         printf("CURRENT TOKEN 1: %s\n", current_token->value);
-//         current_token--;
-//         if(current_token->type == INT){
-//           Node *expr_node = malloc(sizeof(Node));
-//           expr_node = init_node(expr_node, current_token->value, INT);
-//           oper_node->left = expr_node;
-//           printf("CURRENT TOKEN 2: %s\n", current_token->value);
-//           current_token++;
-//           current_token++;
-//           printf("CURRENT TOKEN 3: %s\n", current_token->value);
-//           if(current_token->type != INT || current_token == NULL){
-//             printf("Syntax Error hERE\n");
-//             exit(1);
-//           }
-//           Node *second_expr_node = malloc(sizeof(Node));
-//           second_expr_node = init_node(second_expr_node, current_token->value, INT);
-//           oper_node->right = second_expr_node;
-//         }
-//         if(current_token->type == OPERATOR){
-//          // 
-//         }
-//         current_token++;
-//       }
-//       return current_token;
-// }
-
-
 Node* handle_exit(Node *root, Token **current_t, Node *current)
 {
     Token *current_token=*current_t;
@@ -323,7 +274,6 @@ Node* handle_exit(Node *root, Token **current_t, Node *current)
 
         Node* nxtnode=malloc(sizeof(Node));
         open_paren_node->left=init_node(nxtnode,val,INT);    
-        // printf("current token: %s\n", current_token->value);
         if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
         {
             Node *close_paren_node = malloc(sizeof(Node));
@@ -357,16 +307,13 @@ Node* handle_exit(Node *root, Token **current_t, Node *current)
 
 Node* create_variable(Token **current_t, Node *current)
 {
-    // printf("correct1");
     Token *current_token=*current_t;
     Node *var_node = malloc(sizeof(Node));
     var_node = init_node(var_node, current_token->value, KEYWORD);
     current->left = var_node;
     current = var_node;
     current_token++;
-    // printf("correct2");
     handle_token_errors("Invalid syntax after INT", current_token, IDENTIFIER);
-    // printf("correct3");
     if(current_token->type == IDENTIFIER){
         Node *identifier_node = malloc(sizeof(Node));
         identifier_node = init_node(identifier_node, current_token->value, IDENTIFIER);
@@ -374,9 +321,7 @@ Node* create_variable(Token **current_t, Node *current)
         current = identifier_node;
         current_token++;
     }
-    // printf("correct4");
     handle_token_errors("Invalid Syntax After Identifier", current_token, OPERATOR);
-    // printf("correct5");
     if(current_token->type == OPERATOR){
         if(strcmp(current_token->value, "=") != 0){
             print_error("Invalid Variable Syntax on =");
@@ -387,7 +332,6 @@ Node* create_variable(Token **current_t, Node *current)
         current = equals_node;
         current_token++;
     }
-    // printf("correct6");
     if(current_token->type == END_OF_TOKENS || (current_token->type != INT && current_token->type != IDENTIFIER && strcmp(current_token->value , "(") ))
     {
         print_error("Invalid Syntax After Equals");
@@ -400,21 +344,17 @@ Node* create_variable(Token **current_t, Node *current)
     Node *expr_node = malloc(sizeof(Node));
     expr_node = init_node(expr_node, val, INT);
     current->left = expr_node;
-    // current_token++;
-    // printf("correct7");
     if(hashmap_get(&global->table,var_node->left->value,strlen(var_node->left->value)) ){
         printf("ERROR: Reinitialising the variable in same scope!\n");
         exit(1);
     }
 
-    
-    // printf("correct8");   
+     
 
     if(current_token->type == END_OF_TOKENS || (current_token->type != SEPARATOR || strcmp(current_token->value , ";") ))
     {
         print_error("Invalid Syntax MISSING SEMICOLON");
     }
-    // printf("correct9");/
     current = var_node;
     if(strcmp(current_token->value, ";") == 0)
     {
@@ -423,13 +363,10 @@ Node* create_variable(Token **current_t, Node *current)
         current->right = semi_node;
         current = semi_node;
     }
-    // else
-    // exit(1);
     if(hashmap_put(&global->table,var_node->left->value, strlen(var_node->left->value), val) != 0){
       printf("ERROR: Could not insert into hash table!\n");
       exit(1);
     }
-
 
     *current_t=current_token;
     return current;
@@ -437,13 +374,13 @@ Node* create_variable(Token **current_t, Node *current)
 
 Node* reloc_var(Token **current_t, Node *current)
 {
-    Token *current_token=*current_t;
-    
+    Token *current_token=*current_t;    
     Node *identifier_node = malloc(sizeof(Node));
     identifier_node = init_node(identifier_node, current_token->value, IDENTIFIER);
     current->left = identifier_node;
     current = identifier_node;
     current_token++;
+
     handle_token_errors("Invalid Syntax After Identifier", current_token, OPERATOR);
 
     if(current_token->type == OPERATOR){
@@ -456,6 +393,7 @@ Node* reloc_var(Token **current_t, Node *current)
         current = equals_node;
         current_token++;
     }
+
     if(current_token->type == END_OF_TOKENS || (current_token->type != INT && current_token->type != IDENTIFIER && strcmp(current_token->value , "(") ))
     {
         print_error("Invalid Syntax After Equals");
@@ -468,10 +406,6 @@ Node* reloc_var(Token **current_t, Node *current)
     Node *expr_node = malloc(sizeof(Node));
     expr_node = init_node(expr_node, val, INT);
     current->left = expr_node;
-    // current_token++;
-
-    
-
 
     if(current_token->type == END_OF_TOKENS || (current_token->type != SEPARATOR || strcmp(current_token->value , ";") ))
     {
@@ -499,10 +433,6 @@ Node* reloc_var(Token **current_t, Node *current)
         }
     }
 
-
-    
-
-
     *current_t=current_token;
     return current;
 }
@@ -528,7 +458,6 @@ Node* handle_exit_scope( Token **current_t, Node *current)
 
         Node* nxtnode=malloc(sizeof(Node));
         open_paren_node->left=init_node(nxtnode,val,INT);    
-        // printf("current token: %s\n", current_token->value);
         if(current_token->type == SEPARATOR && !strcmp(current_token->value , ")"))
         {
             Node *close_paren_node = malloc(sizeof(Node));
@@ -558,6 +487,89 @@ Node* handle_exit_scope( Token **current_t, Node *current)
     *current_t=current_token;
     return current;
 }
+
+Node* create_if( Token **current_t, Node *current)
+{
+    Token *current_token=*current_t;
+    Node *if_node = malloc(sizeof(Node));
+    if_node = init_node(if_node, current_token->value, KEYWORD);
+    current->left = if_node;
+    current = if_node;
+    current_token++;
+
+    // push_if(global,if_node);
+
+    if(current_token->type == END_OF_TOKENS || (current_token->type != SEPARATOR || strcmp(current_token->value , "(") ))
+    {
+        print_error("ERROR: MISSING BRACKETS AFTER 'IF'");
+    }
+
+    Node *open_node = malloc(sizeof(Node));
+    open_node = init_node(open_node, current_token->value, SEPARATOR);
+    current->left = open_node;
+    current = open_node;
+    current_token++;
+    printf("current token : %s\n",current_token->value);
+    printf("current type : %d\n",INT);
+    if(current_token->type == END_OF_TOKENS || (current_token->type != IDENTIFIER && current_token->type != INT ))
+    {
+        print_error("ERROR: MISSING EXPRESSION BEFORE COMAPARATOR");
+    }
+
+    int res=(int)evaluate(&current_token);
+    char *val=malloc(sizeof(char) * 8 );
+    sprintf(val,"%d",res);
+
+    Node *left_node = malloc(sizeof(Node));
+    left_node = init_node(left_node, val, INT);
+
+    if(current_token->type == END_OF_TOKENS || (current_token->type != KEYWORD || (strcmp(current_token->value , "eq") &&strcmp(current_token->value , "neq"))))
+    {
+        print_error("ERROR: MISSING COMPARATOR IN 'IF");
+    }
+
+    Node *comp_node = malloc(sizeof(Node));
+    comp_node = init_node(comp_node, current_token->value, SEPARATOR);
+    current->left = comp_node;
+    current = comp_node;
+    current_token++;
+
+    if(current_token->type == END_OF_TOKENS || (current_token->type != IDENTIFIER && current_token->type != INT ))
+    {
+        print_error("ERROR: MISSING EXPRESSION AFTER COMPARATOR");
+    }
+
+    int res1=(int)evaluate(&current_token);
+    char *val1=malloc(sizeof(char) * 8 );
+    sprintf(val1,"%d",res1);
+
+    Node *right_node = malloc(sizeof(Node));
+    right_node = init_node(right_node, val1, INT);
+
+    current->left = left_node;
+    current->right = right_node;
+
+    if(current_token->type == END_OF_TOKENS || (current_token->type != SEPARATOR || strcmp(current_token->value , ")") ))
+    {
+        print_error("ERROR: MISSING BRACKETS AT THE END OF 'IF'");
+    }
+
+    Node *close_node = malloc(sizeof(Node));
+    close_node = init_node(close_node, current_token->value, SEPARATOR);
+    open_node->right = close_node;
+    current = close_node;
+    current_token++;
+
+    if(current_token->type == END_OF_TOKENS || (current_token->type != SEPARATOR || strcmp(current_token->value , "{") ))
+    {
+        print_error("ERROR: MISSING '{' AT THE END OF 'IF'");
+    }
+
+    current_token--;
+    *current_t=current_token;
+    return current;
+}
+
 Node *parser(Token *tokens)
 {
     Token *current_token = &tokens[0];
@@ -567,11 +579,6 @@ Node *parser(Token *tokens)
 
     assert(hashmap_create(initial_size2, &hashmap) == 0 && "ERROR: Could not create hashmap\n");
 
-
-    // hashmap_put(hashmap,"dhruv",5,"gupta");
-
-    // int val = hashmap_num_entries(hashmap);
-    // printf("value = %d\n",val);
     Node *current = root;
 
     while(current_token->type != END_OF_TOKENS)
@@ -583,13 +590,12 @@ Node *parser(Token *tokens)
         if(current == root)
         {
             //;
-        }
+        }        
         switch(current_token->type)
         {
             case KEYWORD:
                 if(!strcmp(current_token->value, "exit"))
                 {
-                    printf("level: %d\n",global->level);
                     if(global->level)
                     {
                         current=handle_exit_scope(&current_token,current);
@@ -603,15 +609,39 @@ Node *parser(Token *tokens)
                 else if(!strcmp(current_token->value, "int")){
                     current=create_variable(&current_token,current);
                 }
+                else if(!strcmp(current_token->value, "if")){
+                    current=create_if(&current_token,current);
+
+                }
                 break;
             case SEPARATOR:
-                if(!strcmp(current_token->value, "{"))
-                {
-                    global=enter_scope(global);
+                
+                if (!strcmp(current_token->value, "{")) {
+                    global = enter_scope(global);
+
+                    Node *open_node = malloc(sizeof(Node));
+                    open_node=init_node(open_node, current_token->value, SEPARATOR);
+
+                    push_brace(open_node);          // Track this brace for later matching
+                    current->left = open_node;
+                    current = open_node;            // Advance pointer
                 }
-                else if(!strcmp(current_token->value, "}"))
-                {
-                    global=exit_scope(global);
+                else if (!strcmp(current_token->value, "}")) {
+                    if(global->level == 0)
+                    {
+                        print_error("missing opening para");
+                    }  
+                    global = exit_scope(global);                    
+
+                    Node *open_node = pop_brace();  // Get matching `{`
+                    Node *close_node = malloc(sizeof(Node));
+                    close_node=init_node(close_node, current_token->value, SEPARATOR);
+
+                    if (open_node) {
+                        open_node->right = close_node;  // Link the correct matching pair
+                    }
+
+                    current = close_node;
                 }
                 break;
             case INT:
@@ -633,10 +663,15 @@ Node *parser(Token *tokens)
 
                 // printf("IDENTIFIER\n");
                 break;
-            case BEGINNING:
+            case BEGINNING: break;
             case END_OF_TOKENS:
+                
         }
         current_token++;
+    }
+    if(global->level > 0)
+    {
+        print_error("missing closing brackets");
     }
     print_tree(root,0,"root");
     return root;

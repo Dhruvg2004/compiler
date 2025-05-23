@@ -51,9 +51,10 @@ void traverse_tree(Node *node, int is_left, FILE *file)
     {
 
     }
-    else if(node->type == OPERATOR)
+    else if(node->type == IDENTIFIER)
     {
-    
+        fprintf(file, "\tpush %s\n", node->left->left->value);
+        node->left=NULL;
     }
     else if(strcmp(node->value, "int") == 0)
     {

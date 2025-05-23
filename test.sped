@@ -1,7 +1,9 @@
-int x=2;
+int x=5;
+if(x eq 5)
 {
-    int x=5;
-    x=3;
-    exit(x);
+    if (x neq 3)
+    {
+        
+    }
 }
-exit(x);
+exit(x +9);

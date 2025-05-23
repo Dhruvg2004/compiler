@@ -32,19 +32,10 @@ int main(int argc, char *argv[])
     {
         print_token(tokens[i]);
     }
-
-    // assert(hashmap_create(initial_size, &hashmap) == 0 && "ERROR: Could not create hashmap\n");
-    // hashmap_put(&hashmap,"dhruv",5,"gupta");
     Node *root = parser(tokens);
-    // Node *root = parser(tokens,&hashmap);
-    // int val = hashmap_num_entries(&hashmap);
-    // printf("vadddddddddlue = %d\n",val);
-
-    // char* hehe = (char*)hashmap_get(&hashmap,"hello",5);
-    // printf("vadddddd = %s\n",hehe);
-    generate_code(root);
-    printf("\nOutput of the code:\n");
-    system("./buildasm.sh");
+    // generate_code(root);
+    // printf("\nOutput of the code:\n");
+    // system("./buildasm.sh");
     fclose(file);
     return 0;
 }   

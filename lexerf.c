@@ -94,6 +94,22 @@ Token *generate_keyword_or_identifier(char current,FILE *file)
     {
         token->type=KEYWORD;
     }
+    else if(strcmp(keyword,"if") == 0)
+    {
+        token->type=KEYWORD;
+    }
+    else if(strcmp(keyword,"eq") == 0)
+    {
+        token->type=KEYWORD;
+    }
+    else if(strcmp(keyword,"neq") == 0)
+    {
+        token->type=KEYWORD;
+    }
+    else if(strcmp(keyword,"else") == 0)
+    {
+        token->type=KEYWORD;
+    }
     else
     {
         token->type=IDENTIFIER;
